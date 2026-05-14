@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedbookWB — Hospital Portal</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Playfair+Display:wght@700&display=swap');
+
+  :root {
+    --blue: #1d4ed8; --blue-light: #3b82f6; --blue-pale: #eff6ff;
+    --green: #16a34a; --green-pale: #dcfce7;
+    --red: #dc2626; --red-pale: #fee2e2;
+    --indigo: #4f46e5;
+    --gray-50: #f8fafc; --gray-100: #f1f5f9; --gray-200: #e2e8f0;
+    --gray-400: #94a3b8; --gray-600: #475569; --gray-800: #1e293b;
+    --white: #ffffff;
+    --radius: 14px; --shadow: 0 4px 24px rgba(30,41,59,.10);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Nunito', sans-serif; background: var(--gray-50); color: var(--gray-800); min-height: 100vh; }
+
+  /* ── Header ── */
+  header { background: linear-gradient(90deg, #0d6efd 0%, #3aa0ff 100%); padding: 5px 22px; height: 64px; display: flex; align-items: center; gap: 14px; box-shadow: 0 2px 12px rgba(29,78,216,.3); }
+  header img { height: 46px; border-radius: 8px; }
+  header h1 { color: #fff; font-size: 20px; font-weight: 800; }
+  header span { color: rgba(255,255,255,.7); font-size: 13px; margin-left: 4px; }
+  header .logout-btn { margin-left: auto; background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3); color: #fff; padding: 6px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; transition: background .2s; }
+  header .logout-btn:hover { background: rgba(255,255,255,.25); }
+
+  /* ── Auth Screen ── */
+  #auth-screen { display: flex; align-items: center; justify-content: center; min-height: calc(100vh - 64px); padding: 24px; }
+  .auth-card { background: var(--white); border-radius: 20px; box-shadow: var(--shadow); padding: 40px; width: 100%; max-width: 440px; }
+  .auth-card h2 { font-family: 'Playfair Display', serif; font-size: 26px; color: var(--blue); margin-bottom: 6px; }
+  .auth-card p { color: var(--gray-400); font-size: 14px; margin-bottom: 28px; }
+  .tab-row { display: flex; border-radius: 10px; background: var(--gray-100); padding: 4px; margin-bottom: 24px; }
+  .tab-btn { flex: 1; padding: 8px; border: none; background: transparent; border-radius: 8px; font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 14px; cursor: pointer; color: var(--gray-400); transition: all .2s; }
+  .tab-btn.active { background: var(--white); color: var(--blue); box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 13px; font-weight: 700; color: var(--gray-600); margin-bottom: 6px; }
+  .form-group input, .form-group select { width: 100%; padding: 11px 14px; border: 1.5px solid var(--gray-200); border-radius: 10px; font-family: 'Nunito', sans-serif; font-size: 14px; outline: none; transition: border-color .2s; background: var(--gray-50); }
+  .form-group input:focus, .form-group select:focus { border-color: var(--blue-light); background: var(--white); }
+  .btn-primary { width: 100%; padding: 12px; background: var(--blue); color: #fff; border: none; border-radius: 10px; font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 15px; cursor: pointer; transition: background .2s, transform .1s; margin-top: 4px; }
+  .btn-primary:hover { background: #1e40af; transform: translateY(-1px); }
+  .error-msg { color: var(--red); font-size: 13px; margin-top: 10px; text-align: center; min-height: 18px; }
+  .success-box { background: var(--green-pale); border: 1.5px solid var(--green); border-radius: 10px; padding: 16px; margin-top: 16px; display: none; }
+  .success-box h3 { color: var(--green); font-size: 15px; margin-bottom: 8px; }
+  .success-box p { font-size: 13px; color: #166534; }
+  .id-badge { background: #fff; border: 1.5px solid var(--green); border-radius: 8px; padding: 8px 12px; font-size: 18px; font-weight: 900; letter-spacing: 2px; color: var(--green); text-align: center; margin: 8px 0; }
+
+  /* ── Portal ── */
+  #portal-screen { display: none; }
+  .portal-header { background: var(--white); border-bottom: 1.5px solid var(--gray-200); padding: 20px 28px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .portal-header h2 { font-size: 20px; font-weight: 900; color: var(--gray-800); }
+  .hospital-badge { background: var(--blue-pale); border: 1.5px solid #bfdbfe; border-radius: 8px; padding: 4px 12px; font-size: 13px; font-weight: 700; color: var(--blue); }
+  .district-badge { background: var(--green-pale); border: 1.5px solid #bbf7d0; border-radius: 8px; padding: 4px 12px; font-size: 13px; font-weight: 700; color: var(--green); }
+
+  .portal-body { padding: 24px; max-width: 1200px; margin: 0 auto; }
+
+  /* Specialty tabs */
+  .spec-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+  .spec-tab { padding: 7px 14px; border-radius: 20px; border: 1.5px solid var(--gray-200); background: var(--white); font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; color: var(--gray-600); transition: all .2s; }
+  .spec-tab.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+  .spec-tab:hover:not(.active) { border-color: var(--blue-light); color: var(--blue); }
+
+  /* Section header */
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+  .section-header h3 { font-size: 17px; font-weight: 800; }
+  .count-pill { background: var(--blue-pale); color: var(--blue); border-radius: 20px; padding: 3px 12px; font-size: 13px; font-weight: 700; }
+
+  /* Add doctor form */
+  .add-form-card { background: var(--white); border: 1.5px solid var(--gray-200); border-radius: var(--radius); padding: 20px; margin-bottom: 24px; box-shadow: var(--shadow); }
+  .add-form-card h4 { font-size: 15px; font-weight: 800; color: var(--indigo); margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+  .add-form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+  .add-form-grid input, .add-form-grid select { padding: 9px 12px; border: 1.5px solid var(--gray-200); border-radius: 8px; font-family: 'Nunito', sans-serif; font-size: 13px; width: 100%; outline: none; }
+  .add-form-grid input:focus, .add-form-grid select:focus { border-color: var(--blue-light); }
+  .add-form-days { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: 4px; }
+  .day-toggle { width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid var(--gray-200); background: var(--gray-100); font-size: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--gray-400); transition: all .15s; }
+  .day-toggle.on { background: var(--green); border-color: var(--green); color: #fff; }
+  .btn-add { padding: 9px 20px; background: var(--indigo); color: #fff; border: none; border-radius: 8px; font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 14px; cursor: pointer; margin-top: 14px; transition: background .2s; }
+  .btn-add:hover { background: #4338ca; }
+
+  /* Doctor grid */
+  .doctor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+  .doc-card { background: var(--white); border: 1.5px solid var(--gray-200); border-radius: var(--radius); padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,.04); transition: box-shadow .2s; }
+  .doc-card:hover { box-shadow: var(--shadow); }
+  .doc-card h4 { font-size: 15px; font-weight: 800; margin-bottom: 6px; color: var(--gray-800); }
+  .doc-card .meta { font-size: 12.5px; color: var(--gray-600); margin: 2px 0; }
+  .doc-card .day-pills { display: flex; gap: 3px; margin: 8px 0; }
+  .dp { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; }
+  .dp.on { background: var(--green-pale); color: var(--green); }
+  .dp.off { background: var(--gray-100); color: var(--gray-400); }
+  .btn-delete { padding: 5px 14px; background: var(--red-pale); color: var(--red); border: 1.5px solid #fca5a5; border-radius: 7px; font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 12px; cursor: pointer; margin-top: 8px; transition: background .2s; }
+  .btn-delete:hover { background: #fee2e2; }
+  .empty-state { grid-column: 1/-1; text-align: center; padding: 40px; color: var(--gray-400); font-size: 14px; }
+
+  @media(max-width:600px){ .auth-card{padding:28px 20px;} .add-form-grid{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="index.html" style="display:flex;align-items:center;text-decoration:none;"><img src="logo.png" alt="MedbookWB" style="height: 55px;object-fit:contain;border-radius:8px;"></a>
+  <h1>Hospital Portal</h1>
+  <button class="logout-btn" id="logout-btn" style="display:none" onclick="doLogout()">Logout</button>
+</header>
+
+<!-- AUTH -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <h2>🏥 Hospital Portal</h2>
+    <p>Manage your doctors and specialties</p>
+    <div class="tab-row">
+      <button class="tab-btn active" id="tab-login" onclick="switchTab('login')">Login</button>
+      
+    </div>
+
+    <!-- Login form -->
+    <div id="login-form">
+      <div class="form-group">
+        <label>Hospital ID</label>
+        <input type="text" id="login-id" placeholder="e.g. MBH01001">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="login-pwd" placeholder="Your password">
+      </div>
+      <button class="btn-primary" onclick="doLogin()">Login →</button>
+      <div class="error-msg" id="login-error"></div>
+    </div>
+
+    <!-- Register form -->
+    <div id="register-form" style="display:none">
+      <div class="form-group">
+        <label>Hospital / Nursing Home Name</label>
+        <input type="text" id="reg-name" placeholder="e.g. Sunrise Nursing Home">
+      </div>
+      <div class="form-group">
+        <label>District</label>
+        <select id="reg-district">
+          <option value="">Select district...</option>
+          <option>Kolkata</option><option>Howrah</option><option>Hooghly</option>
+          <option>North 24 Parganas</option><option>South 24 Parganas</option>
+          <option>Nadia</option><option>Murshidabad</option><option>Birbhum</option>
+          <option>Purba Bardhaman</option><option>Purulia</option><option>Jalpaiguri</option>
+          <option>Darjeeling</option><option>Alipurduar</option><option>Bankura</option>
+          <option>Cooch Behar</option><option>Dakshin Dinajpur</option><option>Malda</option>
+          <option>Paschim Medinipur</option><option>Purba Medinipur</option>
+          <option>Paschim Bardhaman</option><option>Jhargram</option>
+          <option>Uttar Dinajpur</option><option>Kalimpong</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Location / Area</label>
+        <input type="text" id="reg-location" placeholder="e.g. Salt Lake, Sector V">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="reg-pwd" placeholder="Choose a password">
+      </div>
+      <button class="btn-primary" onclick="doRegister()">Register Hospital</button>
+      <div class="error-msg" id="reg-error"></div>
+      <div class="success-box" id="reg-success">
+        <h3>✅ Registration Successful!</h3>
+        <p>Your Hospital ID is:</p>
+        <div class="id-badge" id="new-hosp-id">—</div>
+        <p>Save this ID — you need it to login. Keep your password safe.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PORTAL -->
+<div id="portal-screen">
+  <div class="portal-header">
+    <div>
+      <h2 id="portal-hosp-name">Hospital Name</h2>
+      <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;">
+        <span class="hospital-badge" id="portal-hosp-id"></span>
+        <span class="district-badge" id="portal-hosp-dist"></span>
+        <span style="font-size:13px;color:var(--gray-400);padding:4px 0;" id="portal-hosp-loc"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="portal-body">
+    <!-- Specialty selector -->
+    <div class="spec-tabs" id="spec-tabs"></div>
+
+    <!-- Add doctor form -->
+    <div class="add-form-card">
+      <h4>➕ Add Doctor to <span id="add-spec-label">this specialty</span></h4>
+      <div class="add-form-grid">
+        <input type="text" id="add-name" placeholder="Doctor name (e.g. Dr. Amit Roy)">
+        <input type="number" id="add-rating" placeholder="Rating (3.0–5.0)" min="3" max="5" step="0.1">
+        <input type="number" id="add-fee" placeholder="Fee (₹)" min="100" max="1000" step="50">
+        <input type="number" id="add-exp" placeholder="Experience (years)" min="1" max="50">
+        <input type="text" id="add-location" placeholder="Chamber location">
+      </div>
+      <div style="margin-top:12px;">
+        <label style="font-size:13px;font-weight:700;color:var(--gray-600);display:block;margin-bottom:6px;">Available Days</label>
+        <div class="add-form-days" id="day-toggles"></div>
+      </div>
+      <button class="btn-add" onclick="addDoctor()">Add Doctor</button>
+      <div class="error-msg" id="add-error"></div>
+    </div>
+
+    <!-- Doctor list -->
+    <div class="section-header">
+      <h3 id="doc-list-title">Doctors</h3>
+      <span class="count-pill" id="doc-count-pill">0 doctors</span>
+    </div>
+    <div class="doctor-grid" id="doctor-grid"></div>
+  </div>
+</div>
+
+<script src="hospitals_data.js"></script>
+<script src="doctors_data.js"></script>
+<script>
+const SPECIALTIES = ["General Physician","Dentist","Pediatrician","Psychiatrist","Pathologist",
+  "Dermatologist","Cardiologist","ENT","Orthopedic","Neurologist","Gynecologist"];
+const DAY_LABELS = ['M','T','W','T','F','S','S'];
+const DAY_NAMES  = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+let currentHospital = null;
+let currentSpecialty = SPECIALTIES[0];
+// Local doctor overrides (add/delete) stored in memory + localStorage key per hospital
+let localDoctors = []; // merged: static + added, minus deleted
+
+function switchTab(tab) {
+  document.getElementById('tab-login').classList.toggle('active', tab==='login');
+  document.getElementById('tab-register').classList.toggle('active', tab==='register');
+  document.getElementById('login-form').style.display = tab==='login' ? '' : 'none';
+  document.getElementById('register-form').style.display = tab==='register' ? '' : 'none';
+}
+
+// ── LOGIN ───────────────────────────────────────────────────
+function doLogin() {
+  const id  = document.getElementById('login-id').value.trim().toUpperCase();
+  const pwd = document.getElementById('login-pwd').value.trim();
+  const err = document.getElementById('login-error');
+  err.textContent = '';
+  if (!id || !pwd) { err.textContent = 'Please enter Hospital ID and password.'; return; }
+  // Check static DB first
+  let hosp = hospitalsDB.find(h => h.id === id && h.password === pwd);
+  // Check locally registered hospitals
+  if (!hosp) {
+    const reg = JSON.parse(localStorage.getItem('registeredHospitals') || '[]');
+    hosp = reg.find(h => h.id === id && h.password === pwd);
+  }
+  if (!hosp) { err.textContent = 'Invalid Hospital ID or password.'; return; }
+  loginSuccess(hosp);
+}
+
+function loginSuccess(hosp) {
+  currentHospital = hosp;
+  localStorage.setItem('hospitalSession', JSON.stringify(hosp));
+  showPortal();
+}
+
+function doLogout() {
+  currentHospital = null;
+  localStorage.removeItem('hospitalSession');
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('portal-screen').style.display = 'none';
+  document.getElementById('logout-btn').style.display = 'none';
+  document.getElementById('login-id').value = '';
+  document.getElementById('login-pwd').value = '';
+  document.getElementById('login-error').textContent = '';
+}
+
+// ── REGISTER ────────────────────────────────────────────────
+function generateNewId(district) {
+  const di = ["Kolkata","Howrah","Hooghly","North 24 Parganas","South 24 Parganas","Nadia","Murshidabad","Birbhum","Purba Bardhaman","Purulia","Jalpaiguri","Darjeeling","Alipurduar","Bankura","Cooch Behar","Dakshin Dinajpur","Malda","Paschim Medinipur","Purba Medinipur","Paschim Bardhaman","Jhargram","Uttar Dinajpur","Kalimpong"].indexOf(district) + 1;
+  const reg = JSON.parse(localStorage.getItem('registeredHospitals') || '[]');
+  const existing = [...hospitalsDB, ...reg].filter(h => h.district === district).length;
+  return `MBH${String(di).padStart(2,'0')}${String(existing + 101).padStart(3,'0')}`;
+}
+
+function doRegister() {
+  const name = document.getElementById('reg-name').value.trim();
+  const district = document.getElementById('reg-district').value;
+  const location = document.getElementById('reg-location').value.trim();
+  const pwd = document.getElementById('reg-pwd').value.trim();
+  const err = document.getElementById('reg-error');
+  err.textContent = '';
+  if (!name || !district || !location || !pwd) { err.textContent = 'All fields are required.'; return; }
+  if (pwd.length < 6) { err.textContent = 'Password must be at least 6 characters.'; return; }
+  // Check name uniqueness in district
+  const allH = [...hospitalsDB, ...JSON.parse(localStorage.getItem('registeredHospitals') || '[]')];
+  if (allH.some(h => h.district === district && h.name.toLowerCase() === name.toLowerCase())) {
+    err.textContent = 'A hospital with this name already exists in this district.'; return;
+  }
+  const id = generateNewId(district);
+  const newHosp = { id, name, district, location, password: pwd };
+  const reg = JSON.parse(localStorage.getItem('registeredHospitals') || '[]');
+  reg.push(newHosp);
+  localStorage.setItem('registeredHospitals', JSON.stringify(reg));
+  document.getElementById('new-hosp-id').textContent = id;
+  document.getElementById('reg-success').style.display = 'block';
+}
+
+// ── PORTAL ──────────────────────────────────────────────────
+function showPortal() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('portal-screen').style.display = 'block';
+  document.getElementById('logout-btn').style.display = '';
+  document.getElementById('portal-hosp-name').textContent = currentHospital.name;
+  document.getElementById('portal-hosp-id').textContent = 'ID: ' + currentHospital.id;
+  document.getElementById('portal-hosp-dist').textContent = currentHospital.district;
+  document.getElementById('portal-hosp-loc').textContent = '📍 ' + currentHospital.location;
+  buildSpecTabs();
+  buildDayToggles();
+  loadDoctors();
+}
+
+function buildSpecTabs() {
+  const el = document.getElementById('spec-tabs');
+  el.innerHTML = SPECIALTIES.map(s =>
+    `<button class="spec-tab${s===currentSpecialty?' active':''}" onclick="selectSpec('${s}')">${s}</button>`
+  ).join('');
+}
+
+function selectSpec(spec) {
+  currentSpecialty = spec;
+  buildSpecTabs();
+  document.getElementById('add-spec-label').textContent = spec;
+  loadDoctors();
+}
+
+function buildDayToggles() {
+  const el = document.getElementById('day-toggles');
+  el.innerHTML = DAY_LABELS.map((l,i) =>
+    `<button class="day-toggle" id="dtog-${i}" onclick="toggleDay(${i})" title="${DAY_NAMES[i]}">${l}</button>`
+  ).join('');
+}
+
+function toggleDay(i) {
+  const btn = document.getElementById('dtog-' + i);
+  btn.classList.toggle('on');
+}
+
+function getSelectedDays() {
+  return DAY_LABELS.map((_,i) => document.getElementById('dtog-'+i).classList.contains('on') ? i : -1).filter(x => x >= 0);
+}
+
+function getStorageKey() { return 'hosp_docs_' + currentHospital.id; }
+
+function loadDoctors() {
+  // Merge: static doctors for this hospital + locally added - deleted
+  const overrides = JSON.parse(localStorage.getItem(getStorageKey()) || '{"added":[],"deleted":[]}');
+  const staticDocs = doctors.filter(d => d.hospitalId === currentHospital.id && d.domain === currentSpecialty);
+  const addedDocs  = (overrides.added || []).filter(d => d.domain === currentSpecialty);
+  const deletedIds = new Set(overrides.deleted || []);
+  localDoctors = [...staticDocs.filter(d => !deletedIds.has(d.id)), ...addedDocs];
+  renderDoctorGrid();
+}
+
+function renderDoctorGrid() {
+  const grid = document.getElementById('doctor-grid');
+  document.getElementById('doc-list-title').textContent = `${currentSpecialty} Doctors`;
+  document.getElementById('add-spec-label').textContent = currentSpecialty;
+  document.getElementById('doc-count-pill').textContent = `${localDoctors.length} doctor${localDoctors.length!==1?'s':''}`;
+
+  if (!localDoctors.length) {
+    grid.innerHTML = '<div class="empty-state">No doctors registered for this specialty yet.</div>';
+    return;
+  }
+  grid.innerHTML = localDoctors.map(d => {
+    const pills = DAY_LABELS.map((l,i) => `<div class="dp ${(d.workDays||[]).includes(i)?'on':'off'}">${l}</div>`).join('');
+    return `<div class="doc-card">
+      <h4>${d.name}</h4>
+      <p class="meta">⭐ ${d.rating} &nbsp;•&nbsp; ${d.experience} yrs exp</p>
+      <p class="meta">💰 ₹${d.fee} &nbsp;•&nbsp; 📍 ${d.location}</p>
+      <div class="day-pills">${pills}</div>
+      <button class="btn-delete" onclick="deleteDoctor('${d.id}')">🗑 Remove</button>
+    </div>`;
+  }).join('');
+}
+
+function addDoctor() {
+  const name = document.getElementById('add-name').value.trim();
+  const rating = parseFloat(document.getElementById('add-rating').value);
+  const fee = parseInt(document.getElementById('add-fee').value);
+  const exp = parseInt(document.getElementById('add-exp').value);
+  const loc = document.getElementById('add-location').value.trim() || currentHospital.location;
+  const days = getSelectedDays();
+  const err = document.getElementById('add-error');
+  err.textContent = '';
+  if (!name) { err.textContent = 'Doctor name is required.'; return; }
+  if (isNaN(rating) || rating < 3 || rating > 5) { err.textContent = 'Rating must be between 3.0 and 5.0.'; return; }
+  if (isNaN(fee) || fee < 100 || fee > 1000) { err.textContent = 'Fee must be between ₹100 and ₹1000.'; return; }
+  if (isNaN(exp) || exp < 1) { err.textContent = 'Experience is required.'; return; }
+  if (!days.length) { err.textContent = 'Select at least one available day.'; return; }
+
+  const overrides = JSON.parse(localStorage.getItem(getStorageKey()) || '{"added":[],"deleted":[]}');
+  const newDoc = {
+    id: `CUSTOM-${currentHospital.id}-${Date.now()}`,
+    name, domain: currentSpecialty, district: currentHospital.district,
+    location: loc, hospitalId: currentHospital.id, hospitalName: currentHospital.name,
+    rating, fee, experience: exp, workDays: days, unavailable: [], slots: [],
+    img: `https://randomuser.me/api/portraits/men/${(overrides.added.length % 90) + 1}.jpg`
+  };
+  overrides.added.push(newDoc);
+  localStorage.setItem(getStorageKey(), JSON.stringify(overrides));
+  // Reset form
+  ['add-name','add-rating','add-fee','add-exp','add-location'].forEach(id => document.getElementById(id).value='');
+  DAY_LABELS.forEach((_,i) => document.getElementById('dtog-'+i).classList.remove('on'));
+  loadDoctors();
+}
+
+function deleteDoctor(docId) {
+  if (!confirm('Remove this doctor from your hospital?')) return;
+  const overrides = JSON.parse(localStorage.getItem(getStorageKey()) || '{"added":[],"deleted":[]}');
+  if (docId.startsWith('CUSTOM-')) {
+    overrides.added = overrides.added.filter(d => d.id !== docId);
+  } else {
+    overrides.deleted = [...new Set([...(overrides.deleted||[]), docId])];
+  }
+  localStorage.setItem(getStorageKey(), JSON.stringify(overrides));
+  loadDoctors();
+}
+
+// Auto-restore session
+(function(){
+  const saved = localStorage.getItem('hospitalSession');
+  if (saved) {
+    try { loginSuccess(JSON.parse(saved)); } catch(e) {}
+  }
+})();
+</script>
+</body>
+</html>

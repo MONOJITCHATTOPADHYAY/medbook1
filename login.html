@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - MedBook WB</title>
+  <link rel="stylesheet" href="doctor.css" />
+  <style>
+    body.auth-body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      display: flex;
+      flex-direction: column;
+    }
+    .auth-card {
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 420px;
+    }
+    .auth-tabs {
+      display: flex;
+      margin-bottom: 24px;
+      border-bottom: 2px solid #eee;
+    }
+    .auth-tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      color: #888;
+      transition: 0.3s;
+    }
+    .auth-tab.active {
+      color: var(--accent);
+      border-bottom: 3px solid var(--accent);
+      margin-bottom: -2px;
+    }
+    .auth-form { display: none; }
+    .auth-form.active { display: block; }
+
+    .auth-card label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #444;
+      margin-bottom: 5px;
+      margin-top: 14px;
+    }
+    .auth-card input {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1.5px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      box-sizing: border-box;
+      transition: border 0.2s;
+    }
+    .auth-card input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .auth-card .btn {
+      width: 100%;
+      margin-top: 14px;
+      padding: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      border-radius: 10px;
+    }
+    .error-msg {
+      color: #dc3545;
+      font-size: 13px;
+      margin-top: 6px;
+      min-height: 18px;
+    }
+    .success-msg {
+      color: #059669;
+      font-size: 13px;
+      margin-top: 6px;
+      min-height: 18px;
+    }
+    #otp-verify-section { display: none; margin-top: 4px; }
+
+    .password-rules {
+      font-size: 12px;
+      margin-top: 8px;
+      padding: 10px 12px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      line-height: 1.8;
+    }
+    .password-rules p { margin: 0; }
+  </style>
+</head>
+<body class="auth-body">
+<header>
+  <div class="header-content">
+    <a href="index.html" style="display:flex;align-items:center;text-decoration:none;">
+      <img src="logo.png" alt="MedbookWB" style="height:70px;object-fit:contain;border-radius:8px;">
+    </a>
+  </div>
+</header>
+<div style="flex:1;display:flex;justify-content:center;align-items:center;padding:30px 20px;">
+
+  <div class="auth-card">
+    <div style="text-align:center; margin-bottom:20px;">
+      <h2 style="color:var(--accent); margin:0;">MedBook WB</h2>
+      <p style="color:#888; margin:5px 0 0;">Doctor Booking Portal</p>
+    </div>
+
+    <div class="auth-tabs">
+      <div class="auth-tab active" onclick="switchTab('login')">Login</div>
+      <div class="auth-tab" onclick="switchTab('signup')">Sign Up</div>
+    </div>
+
+    <!-- ===== LOGIN FORM ===== -->
+    <div id="login-form" class="auth-form active">
+      <label>Email Address</label>
+      <input type="email" id="login-email" placeholder="Enter your email address" />
+
+      <button type="button" class="btn" id="send-otp-btn" onclick="loginSendOTP()">Send OTP</button>
+
+      <div id="otp-verify-section">
+        <label>Enter OTP</label>
+        <input type="text" id="login-otp" placeholder="Enter 6-digit OTP" maxlength="6" />
+        <button type="button" class="btn" onclick="loginVerifyOTP()">Verify OTP &amp; Login</button>
+      </div>
+
+      <div class="error-msg" id="login-error"></div>
+      <div class="success-msg" id="login-success"></div>
+    </div>
+
+    <!-- ===== SIGNUP FORM ===== -->
+    <div id="signup-form" class="auth-form">
+      <!-- Step 1: Details -->
+      <div id="su-details-section">
+        <label>Full Name</label>
+        <input type="text" id="su-name" placeholder="Enter your full name" />
+
+        <label>Email Address</label>
+        <input type="email" id="su-email" placeholder="Enter your email address" />
+
+        <label>Mobile Number</label>
+        <input type="text" id="su-mobile" placeholder="Enter mobile number" maxlength="10" />
+
+        <label>Password</label>
+        <input type="password" id="su-password" placeholder="Create a password" oninput="checkSUPassword()" />
+
+        <div class="password-rules" id="su-password-rules" style="display:none;">
+          <p id="su-rule-length">❌ At least 8 characters</p>
+          <p id="su-rule-upper">❌ One uppercase letter</p>
+          <p id="su-rule-lower">❌ One lowercase letter</p>
+          <p id="su-rule-number">❌ One number</p>
+          <p id="su-rule-special">❌ One special character (@#$%^&*!?)</p>
+        </div>
+
+        <button type="button" class="btn" id="su-create-btn" onclick="doSignup()">Create Account</button>
+      </div>
+
+      <!-- Step 2: OTP Verification (hidden until OTP sent) -->
+      <div id="su-otp-section" style="display:none;">
+        <p style="font-size:13px; color:#555; margin:0 0 14px;">
+          An OTP has been sent to <strong id="su-otp-email-display"></strong>. Please enter it below to verify your account.
+        </p>
+        <label>Enter OTP</label>
+        <input type="text" id="su-otp" placeholder="Enter 6-digit OTP" maxlength="6" />
+        <button type="button" class="btn" onclick="signupVerifyOTP()">Verify &amp; Create Account</button>
+        <button type="button" class="btn" onclick="signupResendOTP()"
+          style="background:#f3f4f6; color:#374151; margin-top:8px; font-weight:500;">
+          Resend OTP
+        </button>
+      </div>
+
+      <div class="error-msg" id="signup-error"></div>
+      <div class="success-msg" id="signup-success"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4.4.1/dist/email.min.js"></script>
+  <script>
+    // ── Config ──────────────────────────────────────────────────────────
+    const EMAILJS_PUBLIC_KEY  = 'vKcbxrilJRHmNjcim';
+    const EMAILJS_SERVICE_ID  = 'service_9dhzguh';
+    const EMAILJS_TEMPLATE_ID = 'template_7eigzsg';
+    emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+
+    let currentOTP   = null;
+    let currentEmail = null;
+
+    // ── LocalStorage helpers (mirrors index.html) ────────────────────────
+    function getUsers() {
+      try { return JSON.parse(localStorage.getItem('mb_users') || '[]'); } catch(e) { return []; }
+    }
+    function findUser(email) {
+      return getUsers().find(u => u.email.toLowerCase() === email.toLowerCase()) || null;
+    }
+    function registerUser(name, email, mobile, password) {
+      const users = getUsers();
+      if (findUser(email)) return false;
+      users.push({ name, email, mobile, password, created_at: new Date().toISOString() });
+      localStorage.setItem('mb_users', JSON.stringify(users));
+      return true;
+    }
+    function generateOTP() {
+      return Math.floor(100000 + Math.random() * 900000).toString();
+    }
+
+    // ── Tab switching ────────────────────────────────────────────────────
+    function switchTab(tab) {
+      document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+      clearMessages();
+      if (tab === 'login') {
+        document.querySelectorAll('.auth-tab')[0].classList.add('active');
+        document.getElementById('login-form').classList.add('active');
+        document.getElementById('otp-verify-section').style.display = 'none';
+      } else {
+        document.querySelectorAll('.auth-tab')[1].classList.add('active');
+        document.getElementById('signup-form').classList.add('active');
+      }
+    }
+    function clearMessages() {
+      ['login-error','login-success','signup-error','signup-success'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = '';
+      });
+      // Reset signup steps when switching tabs
+      const det = document.getElementById('su-details-section');
+      const otp = document.getElementById('su-otp-section');
+      if (det) det.style.display = 'block';
+      if (otp) otp.style.display = 'none';
+      suPendingData = null; suOTP = null;
+    }
+
+    // ── LOGIN: Send OTP ───────────────────────────────────────────────────
+    async function loginSendOTP() {
+      const email   = document.getElementById('login-email').value.trim();
+      const errorEl = document.getElementById('login-error');
+      const succEl  = document.getElementById('login-success');
+      errorEl.textContent = '';
+      succEl.textContent  = '';
+
+      if (!email || !email.includes('@')) {
+        errorEl.textContent = 'Please enter a valid email address.';
+        return;
+      }
+
+      const user = findUser(email);
+      if (!user) {
+        errorEl.textContent = 'No account found with this email. Please sign up first.';
+        return;
+      }
+
+      const btn = document.getElementById('send-otp-btn');
+      btn.textContent = 'Sending...';
+      btn.disabled = true;
+
+      try {
+        currentOTP   = generateOTP();
+        currentEmail = email;
+
+        // Send OTP via EmailJS — no 4th arg needed, publicKey already set in init()
+        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+          to_name:    user.name,
+          to_email:   email,
+          from_name:  'MedBook',
+          user_name:  user.name,
+          user_email: email,
+          email:      email,
+          otp_code:   currentOTP,
+          message:    'Your MedBook login OTP is: ' + currentOTP
+        });
+
+        succEl.textContent = 'OTP sent to ' + email;
+        document.getElementById('otp-verify-section').style.display = 'block';
+        btn.textContent = 'Resend OTP';
+      } catch (err) {
+        console.error('EmailJS error:', err);
+        errorEl.textContent = 'Failed to send OTP: ' + (err.text || err.message || JSON.stringify(err));
+        btn.textContent = 'Send OTP';
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // ── LOGIN: Verify OTP ─────────────────────────────────────────────────
+    function loginVerifyOTP() {
+      const otp     = document.getElementById('login-otp').value.trim();
+      const errorEl = document.getElementById('login-error');
+      errorEl.textContent = '';
+
+      if (!currentEmail || !otp) {
+        errorEl.textContent = 'Please enter the OTP sent to your email.';
+        return;
+      }
+      if (otp !== currentOTP) {
+        errorEl.textContent = 'Invalid OTP. Please try again.';
+        return;
+      }
+
+      const user = findUser(currentEmail);
+      if (!user) { errorEl.textContent = 'User not found.'; return; }
+
+      localStorage.setItem('currentUser', JSON.stringify({
+        name:   user.name,
+        email:  user.email,
+        mobile: user.mobile
+      }));
+      window.location.href = 'index.html';
+    }
+
+    // ── SIGNUP: pending data store ────────────────────────────────────────
+    let suPendingData = null;  // holds form data while OTP is being verified
+    let suOTP         = null;
+
+    // ── SIGNUP: Step 1 — validate, send OTP ──────────────────────────────
+    async function doSignup() {
+      const name     = document.getElementById('su-name').value.trim();
+      const email    = document.getElementById('su-email').value.trim();
+      const mobile   = document.getElementById('su-mobile').value.trim();
+      const password = document.getElementById('su-password').value;
+      const errorEl  = document.getElementById('signup-error');
+      const succEl   = document.getElementById('signup-success');
+      errorEl.textContent = '';
+      succEl.textContent  = '';
+
+      if (!name)                         { errorEl.textContent = 'Please enter your name.'; return; }
+      if (!email || !email.includes('@')){ errorEl.textContent = 'Please enter a valid email.'; return; }
+      if (mobile.length !== 10)          { errorEl.textContent = 'Enter a valid 10-digit mobile number.'; return; }
+      if (!checkSUPassword())            { errorEl.textContent = 'Password does not meet requirements.'; return; }
+      if (findUser(email)) {
+        errorEl.textContent = 'An account with this email already exists. Please log in.';
+        return;
+      }
+
+      const btn = document.getElementById('su-create-btn');
+      btn.textContent = 'Sending OTP...';
+      btn.disabled = true;
+
+      try {
+        suOTP         = generateOTP();
+        suPendingData = { name, email, mobile, password };
+
+        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+          to_name:    name,
+          to_email:   email,
+          from_name:  'MedBook',
+          user_name:  name,
+          user_email: email,
+          email:      email,
+          otp_code:   suOTP,
+          message:    'Your MedBook signup OTP is: ' + suOTP
+        });
+
+        // Show OTP step, hide details form
+        document.getElementById('su-details-section').style.display = 'none';
+        document.getElementById('su-otp-email-display').textContent = email;
+        document.getElementById('su-otp-section').style.display = 'block';
+        succEl.textContent = 'OTP sent to ' + email;
+      } catch (err) {
+        console.error('EmailJS error:', err);
+        errorEl.textContent = 'Failed to send OTP: ' + (err.text || err.message || JSON.stringify(err));
+      } finally {
+        btn.textContent = 'Create Account';
+        btn.disabled = false;
+      }
+    }
+
+    // ── SIGNUP: Resend OTP ────────────────────────────────────────────────
+    async function signupResendOTP() {
+      if (!suPendingData) return;
+      const errorEl = document.getElementById('signup-error');
+      const succEl  = document.getElementById('signup-success');
+      errorEl.textContent = '';
+      succEl.textContent  = 'Resending OTP...';
+      try {
+        suOTP = generateOTP();
+        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+          to_name:    suPendingData.name,
+          to_email:   suPendingData.email,
+          from_name:  'MedBook',
+          user_name:  suPendingData.name,
+          user_email: suPendingData.email,
+          email:      suPendingData.email,
+          otp_code:   suOTP,
+          message:    'Your MedBook signup OTP is: ' + suOTP
+        });
+        succEl.textContent = 'New OTP sent to ' + suPendingData.email;
+      } catch (err) {
+        errorEl.textContent = 'Failed to resend OTP. Try again.';
+      }
+    }
+
+    // ── SIGNUP: Step 2 — verify OTP, register, redirect ──────────────────
+    function signupVerifyOTP() {
+      const otp     = document.getElementById('su-otp').value.trim();
+      const errorEl = document.getElementById('signup-error');
+      const succEl  = document.getElementById('signup-success');
+      errorEl.textContent = '';
+
+      if (!otp)          { errorEl.textContent = 'Please enter the OTP.'; return; }
+      if (otp !== suOTP) { errorEl.textContent = 'Invalid OTP. Please try again.'; return; }
+
+      // Register user in localStorage
+      registerUser(suPendingData.name, suPendingData.email, suPendingData.mobile, suPendingData.password);
+
+      // Log them in immediately
+      localStorage.setItem('currentUser', JSON.stringify({
+        name:   suPendingData.name,
+        email:  suPendingData.email,
+        mobile: suPendingData.mobile
+      }));
+
+      succEl.textContent = '✅ Account verified! Redirecting...';
+      suPendingData = null;
+      suOTP = null;
+
+      setTimeout(() => { window.location.href = 'index.html'; }, 1200);
+    }
+
+    // ── Password strength checker ─────────────────────────────────────────
+    function checkSUPassword() {
+      const password = document.getElementById('su-password').value;
+      const rulesBox = document.getElementById('su-password-rules');
+      rulesBox.style.display = password.length > 0 ? 'block' : 'none';
+
+      const rules = {
+        'su-rule-length':  password.length >= 8,
+        'su-rule-upper':   /[A-Z]/.test(password),
+        'su-rule-lower':   /[a-z]/.test(password),
+        'su-rule-number':  /[0-9]/.test(password),
+        'su-rule-special': /[@#$%^&*!?]/.test(password)
+      };
+      const labels = {
+        'su-rule-length':  'At least 8 characters',
+        'su-rule-upper':   'One uppercase letter',
+        'su-rule-lower':   'One lowercase letter',
+        'su-rule-number':  'One number',
+        'su-rule-special': 'One special character (@#$%^&*!?)'
+      };
+
+      let allPassed = true;
+      for (const [id, passed] of Object.entries(rules)) {
+        const el = document.getElementById(id);
+        if (el) {
+          el.textContent = (passed ? '✅ ' : '❌ ') + labels[id];
+          el.style.color = passed ? 'green' : 'red';
+        }
+        if (!passed) allPassed = false;
+      }
+      return allPassed;
+    }
+  </script>
+</div>
+</body>
+</html>

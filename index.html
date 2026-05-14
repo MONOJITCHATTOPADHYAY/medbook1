@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Doctor Booking - West Bengal</title>
+  <link rel="stylesheet" href="doctor.css" />
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4.4.1/dist/email.min.js"></script>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+  <style>
+    /* ── Auth Modal ─────────────────────────────────────────────────── */
+    .modal{
+      display:none;
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.55);
+      z-index:999;
+      justify-content:center;
+      align-items:center;
+    }
+    .modal.open{ display:flex; }
+
+    /* Auth card */
+    .auth-modal-box{
+      background:#fff;
+      padding:32px 28px 28px;
+      border-radius:16px;
+      width:400px;
+      max-width:95vw;
+      box-shadow:0 20px 60px rgba(0,0,0,.2);
+      position:relative;
+      animation: slideUp .22s ease;
+    }
+    @keyframes slideUp{
+      from{ transform:translateY(30px); opacity:0; }
+      to{   transform:translateY(0);    opacity:1; }
+    }
+
+    .auth-modal-box .close-btn{
+      position:absolute;
+      top:14px; right:18px;
+      font-size:22px;
+      font-weight:700;
+      cursor:pointer;
+      color:#888;
+      background:none;
+      border:none;
+      line-height:1;
+    }
+    .auth-modal-box .close-btn:hover{ color:#333; }
+
+    /* Tabs */
+    .auth-tabs{
+      display:flex;
+      border-bottom:2px solid #e9ecef;
+      margin-bottom:22px;
+    }
+    .auth-tab{
+      flex:1;
+      text-align:center;
+      padding:10px 6px;
+      cursor:pointer;
+      font-weight:600;
+      font-size:15px;
+      color:#888;
+      border-bottom:3px solid transparent;
+      margin-bottom:-2px;
+      transition:.2s;
+    }
+    .auth-tab.active{
+      color:var(--accent);
+      border-bottom-color:var(--accent);
+    }
+
+    /* Panels */
+    .auth-panel{ display:none; }
+    .auth-panel.active{ display:block; }
+
+    /* Inputs inside modal */
+    .auth-modal-box label{
+      display:block;
+      font-size:12px;
+      font-weight:600;
+      color:#555;
+      margin:14px 0 4px;
+      letter-spacing:.4px;
+      text-transform:uppercase;
+    }
+    .auth-modal-box input{
+      width:100%;
+      padding:11px 13px;
+      border:1.5px solid #dde2ea;
+      border-radius:9px;
+      font-size:14px;
+      margin:0;
+      transition:border .2s;
+      box-sizing:border-box;
+    }
+    .auth-modal-box input:focus{
+      outline:none;
+      border-color:var(--accent);
+    }
+    .auth-modal-box .btn{
+      width:100%;
+      margin-top:18px;
+      padding:13px;
+      font-size:15px;
+      border-radius:10px;
+    }
+
+    /* Messages */
+    .auth-error{ color:#dc3545; font-size:13px; margin-top:8px; min-height:18px; }
+    .auth-success{ color:#059669; font-size:13px; margin-top:8px; min-height:18px; }
+
+    /* OTP section */
+    #auth-otp-section{ display:none; margin-top:4px; }
+
+    /* Password rules */
+    .pw-rules{
+      font-size:12px;
+      margin-top:8px;
+      padding:10px 12px;
+      background:#f8f9fa;
+      border-radius:8px;
+      line-height:2;
+      display:none;
+    }
+    .pw-rules p{ margin:0; }
+
+    /* Spinner */
+    .spinner{
+      display:inline-block;
+      width:14px; height:14px;
+      border:2px solid #fff;
+      border-top-color:transparent;
+      border-radius:50%;
+      animation:spin .6s linear infinite;
+      vertical-align:middle;
+      margin-right:6px;
+    }
+    @keyframes spin{ to{ transform:rotate(360deg); } }
+
+    /* ── existing modal (payment) ──────────────────────────────── */
+    .modal-box{
+      background:#fff;
+      padding:20px;
+      border-radius:12px;
+      width:350px;
+      max-width:95%;
+    }
+    .modal-box input{
+      width:100%;
+      padding:10px;
+      margin:8px 0;
+    }
+    .rule{ font-size:14px; margin:4px 0; color:red; }
+
+    /* ── Searching Options Panel ─────────────────────────────── */
+    .search-options-panel {
+      background: #fff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .search-options-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .search-options-choices {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .search-option-card {
+      cursor: pointer;
+      display: block;
+    }
+    .search-option-inner {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 12px 14px;
+      transition: border-color 0.18s, background 0.18s;
+      background: #f8fafc;
+    }
+    .search-option-inner.active {
+      border-color: #0d6efd;
+      background: #eff6ff;
+    }
+    .search-option-radio {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid #cbd5e1;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.18s;
+    }
+    .search-option-radio.selected {
+      border-color: #0d6efd;
+      background: #0d6efd;
+      box-shadow: inset 0 0 0 3px #fff;
+    }
+    #doctor-name-search {
+      width: 100%;
+      padding: 10px 10px 10px 38px;
+      border: 1.5px solid #0d6efd;
+      border-radius: 10px;
+      font-size: 14px;
+      background: #f8fbff;
+      outline: none;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div class="header-content">
+    <a href="index.html" style="display:flex;align-items:center;text-decoration:none;"><img src="logo.png" alt="MedbookWB" style="height:70px;object-fit:contain;border-radius:8px;"></a>
+
+    <!-- Logged-in state -->
+    <div id="user-section" class="user-profile-box" style="display:none;">
+      <div class="user-icon" id="user-initial" onclick="window.location.href='accounts.html'" style="cursor:pointer;" title="My Account">U</div>
+      <div style="font-size:14px; margin-right:8px;">
+        Hi, <span id="user-name-display">User</span>
+      </div>
+      <button class="logout-btn" onclick="logoutUser()">Logout</button>
+    </div>
+
+    <!-- Logged-out state -->
+    <div id="login-btn-section" style="display:flex;align-items:center;gap:8px;">
+      <a href="hospital_portal.html" style="text-decoration:none;">
+        <button class="logout-btn">&#x1F3E5; Hospital Management</button>
+      </a>
+      <button class="logout-btn" onclick="openAuthModal('login')">&#x1f510;Login / Signup</button>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════════════════════════════
+     AUTH MODAL  (Login + Signup tabs)
+══════════════════════════════════════════════════════════════ -->
+<div id="authModal" class="modal">
+  <div class="auth-modal-box">
+    <button class="close-btn" onclick="closeAuthModal()">✕</button>
+
+    <div style="text-align:center; margin-bottom:18px;">
+      <span style="font-size:28px;">🏥</span>
+      <h2 style="margin:4px 0 0; color:var(--accent); font-size:20px;">MedBook WB</h2>
+    </div>
+
+    <!-- Tabs -->
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Login</div>
+      <div class="auth-tab"        id="tab-signup" onclick="switchAuthTab('signup')">Sign Up</div>
+    </div>
+
+    <!-- ── LOGIN PANEL ────────────────────────────────────── -->
+    <div class="auth-panel active" id="panel-login">
+      <label>Email Address</label>
+      <input type="email" id="login-email" placeholder="you@example.com" />
+
+      <button type="button" class="btn" id="login-send-otp-btn" onclick="authLoginSendOTP()">
+        Send OTP
+      </button>
+
+      <div id="auth-otp-section">
+        <label>Enter OTP</label>
+        <input type="text" id="login-otp" placeholder="6-digit OTP" maxlength="6" />
+        <button type="button" class="btn" onclick="authLoginVerifyOTP()">
+          Verify OTP &amp; Login
+        </button>
+      </div>
+
+      <div class="auth-error"   id="login-error"></div>
+      <div class="auth-success" id="login-success"></div>
+    </div>
+
+    <!-- ── SIGNUP PANEL ───────────────────────────────────── -->
+    <div class="auth-panel" id="panel-signup">
+
+      <!-- Step 1: details form -->
+      <div id="signup-details-step">
+        <label>Full Name</label>
+        <input type="text" id="su-name" placeholder="Your full name" />
+
+        <label>Email Address</label>
+        <input type="email" id="su-email" placeholder="you@example.com" />
+
+        <label>Mobile Number</label>
+        <input type="text" id="su-mobile" placeholder="10-digit mobile" maxlength="10" />
+
+        <label>Password</label>
+        <input type="password" id="su-password" placeholder="Create a strong password"
+               oninput="authCheckPassword()" />
+
+        <div class="pw-rules" id="su-pw-rules">
+          <p id="su-r-length">❌ At least 8 characters</p>
+          <p id="su-r-upper">❌ One uppercase letter</p>
+          <p id="su-r-lower">❌ One lowercase letter</p>
+          <p id="su-r-number">❌ One number</p>
+          <p id="su-r-special">❌ One special character (@#$%^&amp;*!?)</p>
+        </div>
+
+        <button type="button" class="btn" id="signup-send-otp-btn" onclick="authSignupSendOTP()">
+          Send OTP
+        </button>
+      </div>
+
+      <!-- Step 2: OTP verify -->
+      <div id="signup-otp-step" style="display:none;">
+        <p style="font-size:13px;color:#555;margin-top:0;">
+          OTP sent to <strong id="su-email-display"></strong>
+        </p>
+        <label>Enter OTP</label>
+        <input type="text" id="su-otp" placeholder="6-digit OTP" maxlength="6" />
+        <button type="button" class="btn" onclick="authSignupVerifyOTP()">
+          Verify &amp; Create Account
+        </button>
+        <button type="button"
+          style="width:100%;margin-top:8px;background:none;border:none;color:var(--accent);
+                 font-size:13px;cursor:pointer;font-weight:600;"
+          onclick="authSignupBack()">← Back to edit</button>
+      </div>
+
+      <div class="auth-error"   id="signup-error"></div>
+      <div class="auth-success" id="signup-success"></div>
+    </div>
+    <!-- end panels -->
+
+  </div><!-- end auth-modal-box -->
+</div><!-- end authModal -->
+
+
+<!-- ══ PAGES ══════════════════════════════════════════════════════ -->
+
+<section id="page-0" class="page active">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <h2 style="margin:0;">Select Your District</h2>
+    <button onclick="openMapModal()" style="display:flex;align-items:center;gap:6px;background:#2563eb;color:#fff;border:none;padding:8px 16px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(37,99,235,.3);transition:background .15s;" onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'">
+      🗺️ Open Map
+    </button>
+  </div>
+  <input id="district-search" placeholder="Type to search districts..." />
+  <div class="district-list" id="district-list"></div>
+  <div class="controls-row">
+    <button class="btn" onclick="confirmDistrict()">Confirm District</button>
+  </div>
+</section>
+
+<section id="page-1" class="page">
+  <div class="top-row">
+    <h2>Select a Specialty</h2>
+    <button class="back-btn" onclick="showPage(0)">← Back</button>
+  </div>
+  <input id="search-doctor" placeholder="Search specialties..." oninput="searchSpecialties()" />
+  <div class="specialty-grid" id="specialty-grid"></div>
+</section>
+
+<section id="page-2" class="page">
+  <div class="top-row">
+    <h2 id="page2-title">Doctors</h2>
+    <button class="back-btn" onclick="showPage(1)">← Back</button>
+  </div>
+
+  <!-- Date Selection (always visible, separate) -->
+  <div class="filters" style="margin-bottom:0;">
+    <div class="filter-item">
+      <label>Select Date</label>
+      <input type="date" id="date-filter" onchange="onDateFilterChange()" />
+      <p id="date-error" style="display:none;color:#dc2626;font-size:12px;margin:4px 0 0 2px;">⚠️ Please select a date to view and book doctors.</p>
+    </div>
+  </div>
+
+  <!-- Searching Options Panel -->
+  <div class="search-options-panel">
+    <div class="search-options-header">
+      <span style="font-size:16px;">🔍</span>
+      <span style="font-weight:700;font-size:15px;color:#1e293b;">Searching Options</span>
+      <span style="font-size:12px;color:#64748b;margin-left:4px;">Choose how to find your doctor</span>
+    </div>
+
+    <div class="search-options-choices">
+      <!-- Option 1: Search by Name -->
+      <label class="search-option-card" onclick="selectSearchMode('name')">
+        <input type="radio" name="search-mode" value="name" id="mode-name" style="display:none;">
+        <div class="search-option-inner" id="card-name">
+          <div class="search-option-radio" id="radio-name"></div>
+          <div style="flex:1;">
+            <div style="font-weight:600;font-size:14px;color:#1e293b;">Search by Doctor's Name</div>
+            <div style="font-size:12px;color:#64748b;margin-top:2px;">Type a doctor's name to find them directly</div>
+          </div>
+        </div>
+      </label>
+
+      <!-- Option 2: Search by Filtering -->
+      <label class="search-option-card" onclick="selectSearchMode('filter')">
+        <input type="radio" name="search-mode" value="filter" id="mode-filter" style="display:none;">
+        <div class="search-option-inner" id="card-filter">
+          <div class="search-option-radio" id="radio-filter"></div>
+          <div style="flex:1;">
+            <div style="font-weight:600;font-size:14px;color:#1e293b;">Search by Filtering</div>
+            <div style="font-size:12px;color:#64748b;margin-top:2px;">Filter by location, fee, experience &amp; rating</div>
+          </div>
+        </div>
+      </label>
+    </div>
+
+    <!-- Name Search Bar (shown when "name" selected) -->
+    <div id="name-search-area" style="display:none;margin-top:12px;">
+      <div style="position:relative;">
+        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:15px;color:#94a3b8;">🔍</span>
+        <input id="doctor-name-search" placeholder="Type doctor's name..." oninput="onDoctorNameSearch()"
+          style="padding-left:36px;border:1.5px solid #0d6efd;border-radius:10px;font-size:14px;background:#f8fbff;" />
+      </div>
+    </div>
+
+    <!-- Filter Options (shown when "filter" selected) -->
+    <div id="filter-options-area" style="display:none;margin-top:12px;">
+      <div class="filters" style="margin:0;padding:0;background:none;box-shadow:none;">
+        <div class="filter-item">
+          <label>Location</label>
+          <input id="location-filter" placeholder="Type location" oninput="onLocationFilterInput()" />
+          <div id="location-suggestions"></div>
+        </div>
+        <div class="filter-item">
+          <label>Fee</label>
+          <select id="fee-filter" onchange="renderDoctors()">
+            <option value="">All</option>
+            <option value="under400">Below ₹400</option>
+            <option value="400to700">₹400 - ₹700</option>
+            <option value="above700">₹700 - ₹900</option>
+            <option value="above900">Above ₹900</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <label>Experience</label>
+          <select id="exp-filter" onchange="renderDoctors()">
+            <option value="0">All</option>
+            <option value="2">2+</option>
+            <option value="5">5+</option>
+            <option value="10">10+</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <label>Rating</label>
+          <select id="rating-filter" onchange="renderDoctors()">
+            <option value="0">All</option>
+            <option value="3">3⭐+</option>
+            <option value="4">4⭐+</option>
+            <option value="4.5">4.5⭐+</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="availability-summary"></div>
+  <h3>Available Doctors</h3>
+  <div id="available-list"></div>
+  <h3>Not Available</h3>
+  <div id="not-available-list"></div>
+</section>
+
+<div class="page" id="page-3">
+  <div id="selected-doctor-info"></div>
+
+  <div class="booking-form">
+    <label>Patient Name</label>
+    <input type="text" id="patient-name" placeholder="Full Name">
+    <label>Contact Number</label>
+    <input type="text" id="patient-contact" placeholder="Mobile Number">
+    <label>Select Time Slot</label>
+    <select id="slot-select"></select>
+    <input type="hidden" id="advance" value="100">
+  </div>
+
+
+  <!-- ── Advance Payment Section ─────────────────────────────── -->
+  <div id="advance-payment-section" style="margin-top:20px; padding:18px; border:1.5px solid #e0e7ff; border-radius:12px; background:#f8faff;">
+    <h2 style="margin:0 0 14px; font-size:17px; color:#1e40af; display:flex; align-items:center; gap:8px;">
+      💰 Advance Payment
+    </h2>
+    <p style="margin:0 0 12px; font-size:13px; color:#555;">Choose how much you'd like to pay in advance:</p>
+
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      <!-- Option 1: 50% -->
+      <label id="adv-label-50" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border:2px solid #ddd; border-radius:10px; cursor:pointer; transition:all .2s; background:#fff;">
+        <input type="radio" name="advance-option" value="50" onchange="updateAdvanceAmount(this)"
+               style="accent-color:#2563eb; width:18px; height:18px; cursor:pointer;">
+        <div>
+          <div style="font-weight:600; font-size:14px; color:#1e293b;">50% of Full Fees</div>
+          <div id="adv-desc-50" style="font-size:12px; color:#64748b; margin-top:2px;">Pay half now, rest at clinic</div>
+        </div>
+        <span id="adv-amt-50" style="margin-left:auto; font-weight:700; font-size:15px; color:#2563eb;">—</span>
+      </label>
+
+      <!-- Option 2: 100% -->
+      <label id="adv-label-100" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border:2px solid #ddd; border-radius:10px; cursor:pointer; transition:all .2s; background:#fff;">
+        <input type="radio" name="advance-option" value="100" onchange="updateAdvanceAmount(this)"
+               style="accent-color:#2563eb; width:18px; height:18px; cursor:pointer;" checked>
+        <div>
+          <div style="font-weight:600; font-size:14px; color:#1e293b;">100% of Full Fees</div>
+          <div style="font-size:12px; color:#64748b; margin-top:2px;">Pay full amount now</div>
+        </div>
+        <span id="adv-amt-100" style="margin-left:auto; font-weight:700; font-size:15px; color:#2563eb;">—</span>
+      </label>
+
+      <!-- Option 3: Custom amount -->
+      <label id="adv-label-custom" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border:2px solid #ddd; border-radius:10px; cursor:pointer; transition:all .2s; background:#fff;">
+        <input type="radio" name="advance-option" value="custom" onchange="updateAdvanceAmount(this)"
+               style="accent-color:#2563eb; width:18px; height:18px; cursor:pointer;">
+        <div style="flex:1;">
+          <div style="font-weight:600; font-size:14px; color:#1e293b;">Enter Your Amount</div>
+          <div style="font-size:12px; color:#64748b; margin-top:2px;">Minimum ₹100 required</div>
+        </div>
+      </label>
+      <!-- Custom amount input (shown when custom selected) -->
+      <div id="custom-advance-wrap" style="display:none; padding:0 4px;">
+        <div style="display:flex; align-items:center; border:2px solid #2563eb; border-radius:10px; overflow:hidden; background:#fff;">
+          <span style="padding:10px 12px; font-weight:700; color:#2563eb; font-size:16px; border-right:1px solid #e0e7ff;">₹</span>
+          <input type="number" id="custom-advance-input" min="100" placeholder="Enter amount (min ₹100)"
+                 oninput="onCustomAdvanceInput()"
+                 style="flex:1; padding:10px 12px; border:none; outline:none; font-size:15px; color:#1e293b;">
+        </div>
+        <p id="custom-advance-error" style="display:none; color:#dc2626; font-size:12px; margin:6px 0 0 4px;">⚠️ Amount must be at least ₹100</p>
+      </div>
+    </div>
+
+    <!-- Advance amount display badge -->
+    <div id="advance-badge" style="margin-top:14px; padding:10px 14px; background:#eff6ff; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+      <span style="font-size:13px; color:#374151; font-weight:500;">Advance Amount to Pay:</span>
+      <span id="advance-badge-amt" style="font-size:18px; font-weight:800; color:#2563eb;">₹100</span>
+    </div>
+  </div>
+  <!-- ── End Advance Payment Section ────────────────────────── -->
+
+  <div id="razorpay-content" style="margin-top:20px; padding:20px; border:1px solid #e0e7ff; border-radius:12px; background:#f8faff; text-align:center;">
+    <div style="font-size:48px; margin-bottom:12px;">💳</div>
+    <h3 style="margin:0 0 8px; color:#0d6efd;">Pay via Razorpay</h3>
+    <p style="color:#555; font-size:14px; margin:0;">Supports UPI, Cards, Net Banking &amp; Wallets.<br>Click <strong>Proceed to Pay</strong> below to open the secure Razorpay checkout.</p>
+  </div>
+
+  <button class="btn" onclick="confirmBooking()"
+          style="width:100%;margin-top:20px;font-size:16px;font-weight:600;" id="proceed-pay-btn">
+    Proceed to Pay ₹100
+  </button>
+
+</div>
+
+<!-- Payment processing modal -->
+<div class="modal" id="payment-modal">
+  <div class="modal-box" style="text-align:center;border-top:5px solid #0d6efd;padding:30px;">
+    <h3 id="status-text" style="margin-bottom:5px;">Awaiting Confirmation</h3>
+    <div id="timer-box" style="font-size:40px;font-weight:800;color:#0d6efd;margin:15px 0;font-family:monospace;">00:25</div>
+    <div style="width:100%;background:#eee;height:8px;border-radius:10px;margin-bottom:20px;overflow:hidden;">
+      <div id="progress-bar" style="width:100%;background:#0d6efd;height:100%;transition:width 1s linear;"></div>
+    </div>
+    <p style="font-size:14px;color:#4b5563;line-height:1.5;">
+      Please complete the transaction in your UPI app.<br>
+      <strong>Do not refresh or close this window.</strong>
+    </p>
+  </div>
+</div>
+
+<section id="page-4" class="page">
+  <h2>Booking Confirmed!</h2>
+  <div id="confirmation-info"></div>
+  <button class="btn" onclick="resetApp()">Book Another</button>
+</section>
+
+<script src="hospitals_data.js"></script>
+<script src="doctors_data.js"></script>
+<script src="monojit.js"></script>
+
+<script>
+/* ════════════════════════════════════════════════════════════════
+   AUTH MODAL — 100% Client-Side
+   • Users stored in localStorage (no backend / no server needed)
+   • OTP sent via EmailJS
+   • Works offline / with just VS Code Live Preview
+════════════════════════════════════════════════════════════════ */
+
+let _loginOTP   = null;
+let _loginEmail = null;
+let _signupOTP  = null;
+
+/* ── LocalStorage user store ──────────────────────────────────── */
+function getUsers() {
+  try { return JSON.parse(localStorage.getItem('mb_users') || '[]'); } catch(e) { return []; }
+}
+function saveUsers(users) {
+  localStorage.setItem('mb_users', JSON.stringify(users));
+}
+function findUser(email) {
+  return getUsers().find(u => u.email.toLowerCase() === email.toLowerCase()) || null;
+}
+function registerUser(name, email, mobile, password) {
+  const users = getUsers();
+  if (findUser(email)) return false; // already exists
+  users.push({ name, email, mobile, password, created_at: new Date().toISOString() });
+  saveUsers(users);
+  return true;
+}
+
+/* ── OTP generator ────────────────────────────────────────────── */
+function generateOTP() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+/* ── Modal helpers ────────────────────────────────────────────── */
+function openAuthModal(tab) {
+  clearAuthMessages();
+  document.getElementById('authModal').classList.add('open');
+  switchAuthTab(tab || 'login');
+}
+function closeAuthModal() {
+  document.getElementById('authModal').classList.remove('open');
+  clearAuthMessages();
+}
+function switchAuthTab(tab) {
+  ['login','signup'].forEach(t => {
+    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
+    document.getElementById('panel-'+t).classList.toggle('active', t===tab);
+  });
+  clearAuthMessages();
+  if (tab === 'login') {
+    document.getElementById('auth-otp-section').style.display = 'none';
+  }
+}
+function clearAuthMessages() {
+  ['login-error','login-success','signup-error','signup-success'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = '';
+  });
+}
+
+/* ── LOGIN: Send OTP ──────────────────────────────────────────── */
+async function authLoginSendOTP() {
+  const email  = document.getElementById('login-email').value.trim();
+  const errEl  = document.getElementById('login-error');
+  const succEl = document.getElementById('login-success');
+  const btn    = document.getElementById('login-send-otp-btn');
+  errEl.textContent = '';
+  succEl.textContent = '';
+
+  if (!email || !email.includes('@')) {
+    errEl.textContent = 'Please enter a valid email address.'; return;
+  }
+
+  // Check user exists in localStorage
+  const user = findUser(email);
+  if (!user) {
+    errEl.textContent = 'No account found with this email. Please sign up first.'; return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Sending…';
+
+  try {
+    _loginOTP   = generateOTP();
+    _loginEmail = email;
+
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_OTP_TEMPLATE, {
+      to_name:    user.name,
+      to_email:   email,
+      from_name:  'MedBook',
+      user_name:  user.name,
+      user_email: email,
+      otp_code:   _loginOTP,
+      message:    'Your MedBook login OTP is: ' + _loginOTP
+    }, { publicKey: EMAILJS_PUBLIC_KEY });
+
+    succEl.textContent = '✅ OTP sent to ' + email;
+    document.getElementById('auth-otp-section').style.display = 'block';
+    btn.innerHTML = 'Resend OTP';
+  } catch(err) {
+    console.error(err);
+    errEl.textContent = 'Failed to send OTP. Check your internet connection.';
+    btn.innerHTML = 'Send OTP';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+/* ── LOGIN: Verify OTP ────────────────────────────────────────── */
+function authLoginVerifyOTP() {
+  const otp   = document.getElementById('login-otp').value.trim();
+  const errEl = document.getElementById('login-error');
+  errEl.textContent = '';
+
+  if (!_loginEmail || !otp) {
+    errEl.textContent = 'Please enter the OTP sent to your email.'; return;
+  }
+  if (otp !== _loginOTP) {
+    errEl.textContent = '❌ Invalid OTP. Please try again.'; return;
+  }
+
+  const user = findUser(_loginEmail);
+  localStorage.setItem('currentUser', JSON.stringify({
+    name:   user.name,
+    email:  user.email,
+    mobile: user.mobile
+  }));
+  _loginOTP   = null;
+  _loginEmail = null;
+  closeAuthModal();
+  checkAuth();
+}
+
+/* ── SIGNUP: Password strength ────────────────────────────────── */
+function authCheckPassword() {
+  const pw  = document.getElementById('su-password').value;
+  const box = document.getElementById('su-pw-rules');
+  box.style.display = pw.length > 0 ? 'block' : 'none';
+
+  const rules = {
+    'su-r-length':  [pw.length >= 8,        'At least 8 characters'],
+    'su-r-upper':   [/[A-Z]/.test(pw),       'One uppercase letter'],
+    'su-r-lower':   [/[a-z]/.test(pw),       'One lowercase letter'],
+    'su-r-number':  [/[0-9]/.test(pw),       'One number'],
+    'su-r-special': [/[@#$%^&*!?]/.test(pw), 'One special character (@#$%^&*!?)']
+  };
+  let ok = true;
+  for (const [id, [pass, label]] of Object.entries(rules)) {
+    const el = document.getElementById(id);
+    if (el) { el.textContent = (pass ? '✅ ' : '❌ ') + label; el.style.color = pass ? 'green' : 'red'; }
+    if (!pass) ok = false;
+  }
+  return ok;
+}
+
+/* ── SIGNUP: Send OTP ─────────────────────────────────────────── */
+async function authSignupSendOTP() {
+  const name     = document.getElementById('su-name').value.trim();
+  const email    = document.getElementById('su-email').value.trim();
+  const mobile   = document.getElementById('su-mobile').value.trim();
+  const password = document.getElementById('su-password').value;
+  const errEl    = document.getElementById('signup-error');
+  const btn      = document.getElementById('signup-send-otp-btn');
+  errEl.textContent = '';
+
+  if (!name)                         { errEl.textContent = 'Please enter your name.'; return; }
+  if (!email || !email.includes('@')) { errEl.textContent = 'Please enter a valid email.'; return; }
+  if (mobile.length !== 10)          { errEl.textContent = 'Enter a valid 10-digit mobile number.'; return; }
+  if (!authCheckPassword())          { errEl.textContent = 'Password does not meet requirements.'; return; }
+
+  // Check email not already registered
+  if (findUser(email)) {
+    errEl.textContent = 'This email is already registered. Please login instead.';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Sending OTP…';
+
+  try {
+    _signupOTP = generateOTP();
+
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_OTP_TEMPLATE, {
+      to_name:    name,
+      to_email:   email,
+      from_name:  'MedBook',
+      user_name:  name,
+      user_email: email,
+      otp_code:   _signupOTP,
+      message:    'Your MedBook signup OTP is: ' + _signupOTP
+    }, { publicKey: EMAILJS_PUBLIC_KEY });
+
+    document.getElementById('su-email-display').textContent = email;
+    document.getElementById('signup-details-step').style.display = 'none';
+    document.getElementById('signup-otp-step').style.display    = 'block';
+    document.getElementById('signup-success').textContent = '✅ OTP sent to ' + email;
+  } catch(err) {
+    console.error(err);
+    errEl.textContent = 'Failed to send OTP. Check your internet connection.';
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = 'Send OTP';
+  }
+}
+
+/* ── SIGNUP: Verify OTP & create account ──────────────────────── */
+function authSignupVerifyOTP() {
+  const name   = document.getElementById('su-name').value.trim();
+  const email  = document.getElementById('su-email').value.trim();
+  const mobile = document.getElementById('su-mobile').value.trim();
+  const password = document.getElementById('su-password').value;
+  const otp    = document.getElementById('su-otp').value.trim();
+  const errEl  = document.getElementById('signup-error');
+  errEl.textContent = '';
+
+  if (!otp) { errEl.textContent = 'Please enter the OTP.'; return; }
+  if (otp !== _signupOTP) { errEl.textContent = '❌ Invalid OTP. Please try again.'; return; }
+
+  // Save user to localStorage
+  registerUser(name, email, mobile, password);
+
+  // Auto-login
+  localStorage.setItem('currentUser', JSON.stringify({ name, email, mobile }));
+  _signupOTP = null;
+  closeAuthModal();
+  checkAuth();
+  alert('🎉 Account created! Welcome to MedBook, ' + name + '!');
+}
+
+/* ── SIGNUP: Back to form ─────────────────────────────────────── */
+function authSignupBack() {
+  document.getElementById('signup-details-step').style.display = 'block';
+  document.getElementById('signup-otp-step').style.display    = 'none';
+  document.getElementById('signup-success').textContent = '';
+}
+
+/* Close on backdrop click */
+document.getElementById('authModal').addEventListener('click', function(e){
+  if (e.target === this) closeAuthModal();
+});
+</script>
+
+
+<!-- ══ West Bengal District Map Modal ══════════════════════ -->
+<style>
+  #wb-map-modal {
+    display:none;position:fixed;inset:0;z-index:9999;
+    background:rgba(15,23,42,0.75);backdrop-filter:blur(6px);
+    overflow:auto;padding:12px;
+  }
+  .map-modal-inner {
+    background:#fff;border-radius:20px;max-width:900px;width:100%;
+    margin:0 auto;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.35);
+  }
+  .map-modal-header {
+    background:linear-gradient(135deg,#2563eb,#1e40af);
+    padding:18px 22px;display:flex;justify-content:space-between;align-items:center;
+  }
+  .map-modal-header h2 {margin:0;color:#fff;font-size:19px;font-weight:800;}
+  .map-modal-header p  {margin:4px 0 0;color:rgba(255,255,255,.75);font-size:12px;}
+  .map-close-btn {
+    background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);
+    color:#fff;border-radius:50%;width:36px;height:36px;font-size:17px;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  }
+  .map-body {display:flex;flex-wrap:wrap;gap:0;}
+  .map-image-wrap {
+    flex:1;min-width:260px;position:relative;background:#eef4fb;
+    padding:12px;display:flex;align-items:center;justify-content:center;
+  }
+  .map-image-wrap img {
+    width:100%;max-width:420px;height:auto;display:block;
+    border-radius:10px;user-select:none;pointer-events:none;
+  }
+  .map-pins-layer {
+    position:absolute;inset:12px;max-width:420px;
+    margin:0 auto;left:50%;transform:translateX(-50%);
+    width:calc(100% - 24px);
+  }
+  .map-pin {
+    position:absolute;transform:translate(-50%,-50%);
+    cursor:pointer;z-index:10;
+  }
+  .pin-dot {
+    width:8px;height:8px;border-radius:50%;
+    background:#2563eb;border:2.5px solid #fff;
+    box-shadow:0 2px 8px rgba(37,99,235,.55);
+    transition:transform .15s,background .15s;
+  }
+  .map-pin:hover .pin-dot {
+    transform:scale(1.55);background:#1d4ed8;
+  }
+  .map-pin.selected .pin-dot {
+    background:#dc2626;transform:scale(1.4);
+    box-shadow:0 2px 10px rgba(220,38,38,.6);
+  }
+  .pin-label {
+    position:absolute;left:50%;transform:translateX(-50%);
+    bottom:calc(100% + 6px);
+    background:#1e293b;color:#fff;
+    padding:4px 9px;border-radius:7px;
+    font-size:11px;font-weight:700;white-space:nowrap;
+    pointer-events:none;opacity:0;transition:opacity .15s;
+    box-shadow:0 2px 8px rgba(0,0,0,.3);
+  }
+  .pin-label::after {
+    content:"";position:absolute;top:100%;left:50%;
+    transform:translateX(-50%);border:4px solid transparent;
+    border-top-color:#1e293b;
+  }
+  .map-pin:hover .pin-label { opacity:1; }
+  /* Sidebar */
+  .map-sidebar {
+    width:190px;min-width:150px;background:#f8faff;
+    border-left:1px solid #e2e8f0;padding:14px;
+    overflow-y:auto;max-height:520px;
+  }
+  .map-sidebar p {
+    font-size:10px;font-weight:700;color:#64748b;
+    text-transform:uppercase;letter-spacing:.8px;margin:0 0 8px;
+  }
+  .sidebar-dist-btn {
+    display:block;width:100%;text-align:left;
+    padding:6px 10px;margin-bottom:4px;
+    border:1px solid #e2e8f0;border-radius:8px;
+    background:#fff;font-size:12px;font-weight:500;
+    color:#1e293b;cursor:pointer;transition:all .12s;
+  }
+  .sidebar-dist-btn:hover {
+    background:#eff6ff;border-color:#2563eb;color:#2563eb;
+  }
+  .sidebar-dist-btn.selected {
+    background:#2563eb;border-color:#2563eb;color:#fff;font-weight:700;
+  }
+  /* Selected info bar */
+  .map-selected-bar {
+    padding:12px 20px;border-top:1px solid #e2e8f0;
+    background:#fff;display:none;align-items:center;
+    justify-content:space-between;gap:12px;flex-wrap:wrap;
+  }
+  .map-selected-bar.visible { display:flex; }
+  .map-footer {
+    padding:8px 20px;background:#f8faff;border-top:1px solid #e2e8f0;
+    text-align:center;
+  }
+  .map-footer p { font-size:10px;color:#94a3b8;margin:0; }
+  /* Mobile */
+  @media(max-width:580px){
+    .map-sidebar { width:100%;max-height:180px;border-left:none;border-top:1px solid #e2e8f0; }
+    .map-body { flex-direction:column; }
+    .pin-label { font-size:10px; }
+    .pin-dot { width:12px;height:12px; }
+  }
+</style>
+
+<div id="wb-map-modal">
+  <div class="map-modal-inner">
+
+    <div class="map-modal-header">
+      <div>
+        <h2>🗺️ West Bengal District Map</h2>
+        <p>Hover over a pin to see district · Click to select</p>
+      </div>
+      <button class="map-close-btn" onclick="closeMapModal()">✕</button>
+    </div>
+
+    <div class="map-body">
+
+      <!-- Map with pins -->
+      <div class="map-image-wrap">
+        <img src="wb_districts.jpg" alt="West Bengal District Map" draggable="false">
+        <div class="map-pins-layer" id="map-pins-layer">
+
+        <div class="map-pin" data-district="Darjeeling"
+             style="left:60.5%;top:12.34%;"
+             onclick="selectDistrictFromMap('Darjeeling')"
+             title="Darjeeling">
+          <div class="pin-dot"></div>
+          <div class="pin-label">Darjeeling</div>
+        </div>
+        <div class="map-pin" data-district="Kalimpong"
+             style="left:65.58%;top:10.46%;"
+             onclick="selectDistrictFromMap('Kalimpong')"
+             title="Kalimpong">
+          <div class="pin-dot"></div>
+          <div class="pin-label">Kalimpong</div>
+        </div>
+        <div class="map-pin" data-district="Jalpaiguri"
+             style="left:69.97%;top:15.62%;"
+             onclick="selectDistrictFromMap('Jalpaiguri')"
+             title="Jalpaiguri">
+          <div class="pin-dot"></div>
+          <div class="pin-label">Jalpaiguri</div>
+        </div>
+        <div class="map-pin" data-district="Alipurduar"
+             style="left:83.76%;top:16.7%;"
+             onclick="selectDistrictFromMap('Alipurduar')"
+             title="Alipurduar">
+          <div class="pin-dot"></div>
+          <div class="pin-label">Alipurduar</div>
+        </div>
+        <div class="map-pin" data-district="Cooch Behar"
+             style="left:82.51%;top:22.15%;"
+             onclick="selectDistrictFromMap('Cooch Behar')"
+             title="Cooch Behar">
+          <div class="pin-dot"></div>
+          <div class="pin-label">Cooch Behar</div>
+        </div>
+        <div class="map-pin" data-district="Uttar Dinajpur"
+             style="left:54.49%;top:28.05%;"
+             onclick="selectDistrictFromMap('Uttar Dinajpur')"
+             title="Uttar Dinajpur">
+          <div class="pin-dot"></div>
+          <div class="pin-label">Uttar Dinajpur</div>
+        </div>
+        <div class="map-pin" data-district="Dakshin Dinajpur"
+             style="left:67.23%;top:36.97%;"
+             onclick="selectDistrictFromMap('Dakshin Dinajpur')"
+             title="Dakshin Dinajpur">
+          <div class="pin-dot"></div>
+          <div class="pin-label">Dakshin Dinajpur</div>
+        </div>
+        <div class="map-pin" data-district="Malda"
+             style="left:56.79%;top:39.82%;"
+             onclick="selectDistrictFromMap('Malda')"
+             title="Malda">
+          <div class="pin-dot"></div>
+          <div class="pin-label">Malda</div>
+        </div>
+        <div class="map-pin" data-district="Murshidabad"
+             style="left:59.65%;top:54.68%;"
+             onclick="selectDistrictFromMap('Murshidabad')"
+             title="Murshidabad">
+          <div class="pin-dot"></div>
+          <div class="pin-label">Murshidabad</div>
+        </div>
+        <div class="map-pin" data-district="Birbhum"
+             style="left:47.16%;top:58.72%;"
+             onclick="selectDistrictFromMap('Birbhum')"
+             title="Birbhum">
+          <div class="pin-dot"></div>
+          <div class="pin-label">Birbhum</div>
+        </div>
+        <div class="map-pin" data-district="Nadia"
+             style="left:65.42%;top:65.96%;"
+             onclick="selectDistrictFromMap('Nadia')"
+             title="Nadia">
+          <div class="pin-dot"></div>
+          <div class="pin-label">Nadia</div>
+        </div>
+        <div class="map-pin" data-district="Purulia"
+             style="left:23.22%;top:68.5%;"
+             onclick="selectDistrictFromMap('Purulia')"
+             title="Purulia">
+          <div class="pin-dot"></div>
+          <div class="pin-label">Purulia</div>
+        </div>
+        <div class="map-pin" data-district="Paschim Bardhaman"
+             style="left:40.95%;top:62.2%;"
+             onclick="selectDistrictFromMap('Paschim Bardhaman')"
+             title="Paschim Bardhaman">
+          <div class="pin-dot"></div>
+          <div class="pin-label">Paschim Bardhaman</div>
+        </div>
+        <div class="map-pin" data-district="Purba Bardhaman"
+             style="left:54.13%;top:66.51%;"
+             onclick="selectDistrictFromMap('Purba Bardhaman')"
+             title="Purba Bardhaman">
+          <div class="pin-dot"></div>
+          <div class="pin-label">Purba Bardhaman</div>
+        </div>
+        <div class="map-pin" data-district="Bankura"
+             style="left:38.33%;top:69.27%;"
+             onclick="selectDistrictFromMap('Bankura')"
+             title="Bankura">
+          <div class="pin-dot"></div>
+          <div class="pin-label">Bankura</div>
+        </div>
+        <div class="map-pin" data-district="Hooghly"
+             style="left:56.43%;top:74.17%;"
+             onclick="selectDistrictFromMap('Hooghly')"
+             title="Hooghly">
+          <div class="pin-dot"></div>
+          <div class="pin-label">Hooghly</div>
+        </div>
+        <div class="map-pin" data-district="North 24 Parganas"
+             style="left:68.0%;top:76.37%;"
+             onclick="selectDistrictFromMap('North 24 Parganas')"
+             title="North 24 Parganas">
+          <div class="pin-dot"></div>
+          <div class="pin-label">North 24 Parganas</div>
+        </div>
+        <div class="map-pin" data-district="Howrah"
+             style="left:54.98%;top:78.62%;"
+             onclick="selectDistrictFromMap('Howrah')"
+             title="Howrah">
+          <div class="pin-dot"></div>
+          <div class="pin-label">Howrah</div>
+        </div>
+        <div class="map-pin" data-district="Kolkata"
+             style="left:61.51%;top:77.94%;"
+             onclick="selectDistrictFromMap('Kolkata')"
+             title="Kolkata">
+          <div class="pin-dot"></div>
+          <div class="pin-label">Kolkata</div>
+        </div>
+        <div class="map-pin" data-district="Paschim Medinipur"
+             style="left:42.85%;top:79.93%;"
+             onclick="selectDistrictFromMap('Paschim Medinipur')"
+             title="Paschim Medinipur">
+          <div class="pin-dot"></div>
+          <div class="pin-label">Paschim Medinipur</div>
+        </div>
+        <div class="map-pin" data-district="Purba Medinipur"
+             style="left:50.34%;top:87.57%;"
+             onclick="selectDistrictFromMap('Purba Medinipur')"
+             title="Purba Medinipur">
+          <div class="pin-dot"></div>
+          <div class="pin-label">Purba Medinipur</div>
+        </div>
+        <div class="map-pin" data-district="South 24 Parganas"
+             style="left:62.8%;top:85.49%;"
+             onclick="selectDistrictFromMap('South 24 Parganas')"
+             title="South 24 Parganas">
+          <div class="pin-dot"></div>
+          <div class="pin-label">South 24 Parganas</div>
+        </div>
+        <div class="map-pin" data-district="Jhargram"
+             style="left:35.91%;top:82.75%;"
+             onclick="selectDistrictFromMap('Jhargram')"
+             title="Jhargram">
+          <div class="pin-dot"></div>
+          <div class="pin-label">Jhargram</div>
+        </div>
+        </div>
+      </div>
+
+      <!-- Sidebar list -->
+      <div class="map-sidebar">
+        <p>All Districts</p>
+        <div id="map-sidebar-list"></div>
+      </div>
+    </div>
+
+    <!-- Selected district bar -->
+    <div class="map-selected-bar" id="map-selected-bar">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:20px;">📍</span>
+        <div>
+          <div style="font-weight:800;font-size:14px;color:#1e293b;" id="map-sel-name">—</div>
+          <div style="font-size:12px;color:#64748b;">Selected district</div>
+        </div>
+      </div>
+      <button onclick="confirmMapSelection()"
+        style="background:#2563eb;color:#fff;border:none;padding:10px 22px;
+               border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;
+               box-shadow:0 2px 8px rgba(37,99,235,.3);white-space:nowrap;">
+        View Doctors →
+      </button>
+    </div>
+
+    <div class="map-footer">
+      <p>Map boundaries are illustrative · Not to scale</p>
+    </div>
+  </div>
+</div>
+
+<!-- Floating tooltip for touch -->
+<div id="map-tooltip" style="display:none;position:fixed;background:#1e293b;color:#fff;
+     padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700;
+     pointer-events:none;z-index:10001;white-space:nowrap;
+     box-shadow:0 4px 12px rgba(0,0,0,.3);"></div>
+<!-- ══ End Map Modal ════════════════════════════════════════ -->
+
+</body>
+</html>

@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Account — MedBook WB</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --blue:       #2563eb;
+      --blue-dark:  #1d4ed8;
+      --blue-light: #eff6ff;
+      --blue-mid:   #dbeafe;
+      --green:      #059669;
+      --green-bg:   #f0fdf4;
+      --text:       #1e293b;
+      --muted:      #64748b;
+      --border:     #e2e8f0;
+      --card-bg:    #ffffff;
+      --bg:         #f1f5f9;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--blue);
+      color: #fff;
+      padding: 0 24px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 12px rgba(37,99,235,.3);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .back-btn {
+      background: rgba(255,255,255,.18);
+      border: 1px solid rgba(255,255,255,.25);
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .back-btn:hover { background: rgba(255,255,255,.28); }
+
+    header h1 {
+      font-family: 'Nunito', sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -.3px;
+    }
+
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+      background: rgba(255,255,255,.22);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 900;
+      font-size: 15px;
+      border: 2px solid rgba(255,255,255,.4);
+    }
+
+    .user-name {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    /* ── Main layout ── */
+    main {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 32px 20px 60px;
+    }
+
+    /* ── Page title ── */
+    .page-title {
+      margin-bottom: 28px;
+    }
+    .page-title h2 {
+      font-family: 'Nunito', sans-serif;
+      font-size: 26px;
+      font-weight: 900;
+      color: var(--text);
+      letter-spacing: -.4px;
+    }
+    .page-title p {
+      font-size: 14px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--blue-mid);
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 24px;
+      width: fit-content;
+    }
+    .tab {
+      padding: 8px 20px;
+      border-radius: 9px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .18s;
+      color: var(--blue);
+      background: transparent;
+      border: none;
+    }
+    .tab.active {
+      background: var(--blue);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(37,99,235,.3);
+    }
+
+    /* ── Stats row ── */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+    .stat-card {
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 18px 20px;
+      border: 1px solid var(--border);
+      text-align: center;
+      box-shadow: 0 1px 4px rgba(0,0,0,.05);
+    }
+    .stat-num {
+      font-family: 'Nunito', sans-serif;
+      font-size: 28px;
+      font-weight: 900;
+      color: var(--blue);
+    }
+    .stat-label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 500;
+      margin-top: 2px;
+    }
+
+    /* ── Appointment cards ── */
+    .appt-list { display: flex; flex-direction: column; gap: 16px; }
+
+    .appt-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,.05);
+      animation: fadeUp .35s ease both;
+    }
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(12px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    .appt-card-top {
+      background: linear-gradient(135deg, var(--blue) 0%, #1e40af 100%);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .doctor-info { display: flex; align-items: center; gap: 12px; }
+
+    .doc-avatar {
+      width: 44px;
+      height: 44px;
+      background: rgba(255,255,255,.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 900;
+      font-size: 18px;
+      color: #fff;
+      flex-shrink: 0;
+      border: 2px solid rgba(255,255,255,.35);
+    }
+
+    .doc-name {
+      font-family: 'Nunito', sans-serif;
+      font-weight: 800;
+      font-size: 16px;
+      color: #fff;
+    }
+    .doc-specialty {
+      font-size: 12px;
+      color: rgba(255,255,255,.75);
+      margin-top: 2px;
+    }
+
+    .status-badge {
+      background: rgba(255,255,255,.18);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,.3);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      flex-shrink: 0;
+    }
+    .status-badge.past {
+      background: rgba(255,255,255,.1);
+      color: rgba(255,255,255,.6);
+    }
+
+    .appt-card-body {
+      padding: 16px 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px 20px;
+    }
+
+    .detail-item {}
+    .detail-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 2px;
+    }
+    .detail-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .appt-card-footer {
+      padding: 12px 20px;
+      border-top: 1px solid var(--border);
+      background: #fafbfc;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tx-id {
+      font-size: 11px;
+      color: var(--muted);
+      font-family: 'Courier New', monospace;
+    }
+
+    .fee-paid {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--green);
+      background: var(--green-bg);
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+
+    /* ── Empty state ── */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      background: var(--card-bg);
+      border-radius: 20px;
+      border: 2px dashed var(--border);
+    }
+    .empty-icon {
+      font-size: 52px;
+      margin-bottom: 16px;
+    }
+    .empty-state h3 {
+      font-family: 'Nunito', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .empty-state p {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+    .book-btn {
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .book-btn:hover { background: var(--blue-dark); }
+
+    /* ── Not logged in ── */
+    .not-logged {
+      text-align: center;
+      padding: 80px 20px;
+    }
+    .not-logged .icon { font-size: 56px; margin-bottom: 16px; }
+    .not-logged h3 {
+      font-family: 'Nunito', sans-serif;
+      font-size: 22px;
+      font-weight: 900;
+      margin-bottom: 10px;
+    }
+    .not-logged p { color: var(--muted); font-size: 15px; margin-bottom: 24px; }
+
+    @media (max-width: 520px) {
+      .stats { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+      .stat-num { font-size: 22px; }
+      .appt-card-body { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <button class="back-btn" onclick="window.location.href='index.html'">← Back</button>
+    <a href="index.html" style="display:flex;align-items:center;text-decoration:none;"><img src="logo.png" alt="MedbookWB" style="height:70px;object-fit:contain;border-radius:8px;"></a>
+  </div>
+  <div class="user-pill">
+    <div class="avatar" id="hdr-avatar">?</div>
+    <span class="user-name" id="hdr-name">My Account</span>
+  </div>
+</header>
+
+<main>
+  <div id="app-root"></div>
+</main>
+
+<script>
+  // ── Helpers ──────────────────────────────────────────────────
+  function getUser() {
+    try { return JSON.parse(localStorage.getItem('currentUser')); } catch { return null; }
+  }
+  function getBookings() {
+    try { return JSON.parse(localStorage.getItem('mb_bookings') || '[]'); } catch { return []; }
+  }
+
+  function isUpcoming(dateStr) {
+    if (!dateStr) return true;
+    // Handle formats: dd/mm/yyyy or yyyy-mm-dd or natural strings
+    let d;
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+      const [dd, mm, yyyy] = dateStr.split('/');
+      d = new Date(`${yyyy}-${mm}-${dd}`);
+    } else {
+      d = new Date(dateStr);
+    }
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    return isNaN(d) || d >= today;
+  }
+
+  function docInitial(name) {
+    return (name || '?').replace(/^Dr\.?\s*/i,'').charAt(0).toUpperCase();
+  }
+
+  function formatDate(dateStr) {
+    if (!dateStr) return '—';
+    let d;
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+      const [dd, mm, yyyy] = dateStr.split('/');
+      d = new Date(`${yyyy}-${mm}-${dd}`);
+    } else {
+      d = new Date(dateStr);
+    }
+    if (isNaN(d)) return dateStr;
+    return d.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+  }
+
+  // ── Render ───────────────────────────────────────────────────
+  let activeTab = 'upcoming';
+
+  function render() {
+    const user = getUser();
+    const root = document.getElementById('app-root');
+
+    // Update header avatar
+    if (user) {
+      document.getElementById('hdr-avatar').textContent = (user.name || 'U').charAt(0).toUpperCase();
+      document.getElementById('hdr-name').textContent = user.name || 'User';
+    }
+
+    if (!user) {
+      root.innerHTML = `
+        <div class="not-logged">
+          <div class="icon">🔐</div>
+          <h3>You're not logged in</h3>
+          <p>Please log in to view your appointments.</p>
+          <button class="book-btn" onclick="window.location.href='index.html'">Go to Login</button>
+        </div>`;
+      return;
+    }
+
+    const allBookings = getBookings();
+    const upcoming = allBookings.filter(b => isUpcoming(b.date));
+    const past     = allBookings.filter(b => !isUpcoming(b.date));
+    const shown    = activeTab === 'upcoming' ? upcoming : past;
+
+    root.innerHTML = `
+      <div class="page-title">
+        <h2>Hello, ${user.name || 'there'} 👋</h2>
+        <p>${user.email || ''}</p>
+      </div>
+
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-num">${allBookings.length}</div>
+          <div class="stat-label">Total Bookings</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">${upcoming.length}</div>
+          <div class="stat-label">Upcoming</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">${past.length}</div>
+          <div class="stat-label">Past</div>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab ${activeTab==='upcoming'?'active':''}" onclick="switchTab('upcoming')">Upcoming</button>
+        <button class="tab ${activeTab==='past'?'active':''}" onclick="switchTab('past')">Past</button>
+      </div>
+
+      <div class="appt-list" id="appt-list">
+        ${shown.length === 0 ? emptyState() : shown.map((b,i) => apptCard(b, activeTab==='upcoming', i)).join('')}
+      </div>
+    `;
+  }
+
+  function emptyState() {
+    const isUpcomingTab = activeTab === 'upcoming';
+    return `
+      <div class="empty-state">
+        <div class="empty-icon">${isUpcomingTab ? '📅' : '📋'}</div>
+        <h3>${isUpcomingTab ? 'No upcoming appointments' : 'No past appointments'}</h3>
+        <p>${isUpcomingTab ? 'Book a doctor visit and it will appear here.' : 'Your completed visits will show up here.'}</p>
+        ${isUpcomingTab ? '<button class="book-btn" onclick="window.location.href=\'index.html\'">Book an Appointment</button>' : ''}
+      </div>`;
+  }
+
+  function formatBookedAt(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    if (isNaN(d)) return '—';
+    return d.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+  }
+
+  function apptCard(b, upcoming, idx) {
+    const delay = idx * 60;
+    return `
+      <div class="appt-card" style="animation-delay:${delay}ms">
+        <div class="appt-card-top">
+          <div class="doctor-info">
+            <div class="doc-avatar">${docInitial(b.doctorName)}</div>
+            <div>
+              <div class="doc-name">${b.doctorName || '—'}</div>
+              <div class="doc-specialty">${b.specialty || '—'} · ${b.location || '—'}</div>
+            </div>
+          </div>
+          <div class="status-badge ${upcoming?'':'past'}">${upcoming ? '✦ Upcoming' : 'Completed'}</div>
+        </div>
+
+        <div class="appt-card-body">
+          <div class="detail-item">
+            <div class="detail-label">Patient</div>
+            <div class="detail-value">${b.patientName || '—'}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Appointment Date</div>
+            <div class="detail-value">${formatDate(b.date)}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Time Slot</div>
+            <div class="detail-value">${b.timeSlot || '—'}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Booked On</div>
+            <div class="detail-value">${formatBookedAt(b.bookedAt)}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Full Fee</div>
+            <div class="detail-value">${b.fee || '—'}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Advance Paid</div>
+            <div class="detail-value" style="color:var(--green); font-weight:700;">${b.advancePaid || b.fee || '—'}</div>
+          </div>
+        </div>
+
+        <div class="appt-card-footer">
+          <span class="tx-id">Txn: ${b.txId || b.id || '—'}</span>
+          <span class="fee-paid">✓ Paid ${b.advancePaid || b.fee || '—'}</span>
+        </div>
+      </div>`;
+  }
+
+  window.switchTab = function(tab) {
+    activeTab = tab;
+    render();
+  };
+
+  // ── Boot ─────────────────────────────────────────────────────
+  render();
+</script>
+</body>
+</html>
